@@ -1,7 +1,8 @@
-package com.mona.mvi
+package com.mona.mvi.ui.main
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.mona.mvi.R
 
 class MainActivity : AppCompatActivity() {
 
