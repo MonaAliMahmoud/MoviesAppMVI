@@ -1,4 +1,4 @@
-package com.mona.moviesappmvi
+package com.mona.mvi
 
 import org.junit.Test
 

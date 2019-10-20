@@ -1,4 +1,4 @@
-package com.mona.moviesappmvi
+package com.mona.mvi
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
