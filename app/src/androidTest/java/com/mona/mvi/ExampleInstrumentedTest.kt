@@ -1,4 +1,4 @@
-package com.mona.moviesappmvi
+package com.mona.mvi
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.AndroidJUnit4
