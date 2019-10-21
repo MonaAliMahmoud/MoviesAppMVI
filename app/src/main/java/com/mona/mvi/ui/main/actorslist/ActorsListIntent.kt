@@ -1,3 +1,7 @@
 package com.mona.mvi.ui.main.actorslist
 
-class ActorsListIntent
+import com.mona.mvi.ui.base.interfaces.BaseIntent
+
+sealed class ActorsListIntent: BaseIntent {
+    object InitialIntent : ActorsListIntent()
+}
