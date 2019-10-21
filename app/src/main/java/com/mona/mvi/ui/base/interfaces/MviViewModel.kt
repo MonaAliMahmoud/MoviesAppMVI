@@ -1,4 +1,4 @@
-package com.mona.mvi.ui.base
+package com.mona.mvi.ui.base.interfaces
 
 import io.reactivex.Observable
 
