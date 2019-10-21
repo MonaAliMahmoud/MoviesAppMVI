@@ -1,4 +1,4 @@
 package com.mona.mvi.ui.base
 
-class BaseRepository {
+abstract class BaseRepository {
 }

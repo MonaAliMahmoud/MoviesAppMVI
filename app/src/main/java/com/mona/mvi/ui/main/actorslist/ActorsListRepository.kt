@@ -1,3 +1,8 @@
 package com.mona.mvi.ui.main.actorslist
 
-class ActorsListRepository
+import com.mona.mvi.ui.base.BaseRepository
+import javax.inject.Inject
+
+class ActorsListRepository@Inject constructor() : BaseRepository(){
+
+}
