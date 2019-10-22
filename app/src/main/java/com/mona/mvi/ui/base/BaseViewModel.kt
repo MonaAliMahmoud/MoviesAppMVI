@@ -1,82 +1,60 @@
 package com.mona.mvi.ui.base
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.mona.mvi.ui.base.interfaces.*
+import com.mona.mvi.ui.main.actorslist.ActorsListIntent
+import com.mona.mvi.ui.main.actorslist.ActorsListViewState
 import io.reactivex.Observable
-import io.reactivex.Scheduler
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.ObservableTransformer
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.Consumer
-import io.reactivex.schedulers.Schedulers
-import javax.inject.Inject
+import io.reactivex.functions.BiFunction
+import io.reactivex.subjects.PublishSubject
 
-abstract class BaseViewModel<Repository : BaseRepository> : ViewModel()  {
-    @Inject
-    lateinit var repository: Repository
+abstract class BaseViewModel<A:BaseAction, I: BaseIntent<A>,
+        S: BaseViewState, R: BaseResult>
+        (val actionProcessor: MviActionProcessor<A,R>): ViewModel(), MviViewModel<I,S>  {
 
-//    val error = MutableLiveData<ErrorModel>()
-    val loading = MutableLiveData<Boolean>()
-    val compositeDisposable = CompositeDisposable()
+    private val intentsSubject: PublishSubject<I> = PublishSubject.create()
+    private val statesObservable: Observable<S> = compose()
+    private val disposables = CompositeDisposable()
 
-    fun <T> subscribe(
-        observable: Observable<T>,
-        success: Consumer<T>,
-        error: Consumer<Throwable>,
-        subscribeScheduler: Scheduler = Schedulers.io(),
-        observeOnMainThread: Boolean = true) {
+    abstract fun getIntentFilters(): ObservableTransformer<I, I>
 
-        val observerScheduler =
-            if (observeOnMainThread) AndroidSchedulers.mainThread()
-            else subscribeScheduler
+    abstract fun getIdleState(): S
 
-        compositeDisposable.add(observable
-            .subscribeOn(subscribeScheduler)
-            .observeOn(observerScheduler)
-            .subscribe(success, error))
+    abstract fun getReducer(): BiFunction<S, in R, S>?
+
+    private fun compose(): Observable<S> {
+        return intentsSubject
+            .compose(getIntentFilters())
+            .map(this::mapIntentToAction)
+            .compose(actionProcessor.actionProcessor)
+            // Cache each state and pass it to the reducer to create a new state from
+            // the previous cached one and the latest Result emitted from the action processor.
+            // The Scan operator is used here for the caching.
+            .scan(getIdleState(), getReducer())
+            // When a reducer just emits previousState, there's no reason to call render. In fact,
+            // redrawing the UI in cases like this can cause jank (e.g. messing up snackbar animations
+            // by showing the same snackbar twice in rapid succession).
+            .distinctUntilChanged()
+            // Emit the last one event of the stream on subscription
+            // Useful when a View rebinds to the ViewModel after rotation.
+            .replay(1)
+            // Create the stream on creation without waiting for anyone to subscribe
+            // This allows the stream to stay alive even when the UI disconnects and
+            // match the stream's lifecycle to the ViewModel's one.
+            .autoConnect(0)
     }
 
-    fun <T> subscribe(
-        observable: Single<T>,
-        success: Consumer<T>,
-        error: Consumer<Throwable> = Consumer { },
-        subscribeScheduler: Scheduler = Schedulers.io(),
-        observeOnMainThread: Boolean = true,
-        showLoading: Boolean = true) {
+    private fun mapIntentToAction(intent: I) = intent.mapToAction()
 
-        val observerScheduler =
-            if (observeOnMainThread) AndroidSchedulers.mainThread()
-            else subscribeScheduler
-
-        compositeDisposable.add(observable
-            .subscribeOn(subscribeScheduler)
-            .observeOn(observerScheduler)
-            .compose { single ->
-                composeSingle<T>(single, showLoading)
-            }
-            .subscribe(success, error))
+    override fun processIntents(intents: Observable<I>) {
+        disposables.add(intents.subscribe(intentsSubject::onNext))
     }
 
-    private fun <T> composeSingle(single: Single<T>, showLoading: Boolean = true): Single<T> {
-        return single
-            .doOnError {
-                //                Timber.e(it)
-//                getRetrofitError(it)
-                loading.postValue(false)
-            }
-            .doOnSubscribe {
-                loading.postValue(showLoading)
-            }.doOnSuccess {
-                loading.postValue(false)
-            }
-    }
-
-    fun clearSubscription() {
-        if (compositeDisposable.isDisposed.not()) compositeDisposable.clear()
-    }
+    override fun states(): Observable<S> = statesObservable
 
     override fun onCleared() {
-        clearSubscription()
-        super.onCleared()
+        disposables.dispose()
     }
 }

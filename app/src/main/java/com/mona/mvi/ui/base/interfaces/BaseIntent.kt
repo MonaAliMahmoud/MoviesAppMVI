@@ -1,3 +1,5 @@
 package com.mona.mvi.ui.base.interfaces
 
-interface BaseIntent
+interface BaseIntent<A: BaseAction>{
+    fun mapToAction(): A
+}
