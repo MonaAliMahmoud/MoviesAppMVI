@@ -2,17 +2,14 @@ package com.mona.mvi.ui.base
 
 import androidx.lifecycle.ViewModel
 import com.mona.mvi.ui.base.interfaces.*
-import com.mona.mvi.ui.main.actorslist.ActorsListIntent
-import com.mona.mvi.ui.main.actorslist.ActorsListViewState
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.subjects.PublishSubject
 
-abstract class BaseViewModel<A:BaseAction, I: BaseIntent<A>,
-        S: BaseViewState, R: BaseResult>
-        (val actionProcessor: MviActionProcessor<A,R>): ViewModel(), MviViewModel<I,S>  {
+abstract class BaseViewModel<A:BaseAction, I: BaseIntent<A>, S: BaseViewState, R: BaseResult>
+        (val actionProcessor: MviActionProcessor<A,R>): ViewModel(),  MviViewModel<A, I, S>  {
 
     private val intentsSubject: PublishSubject<I> = PublishSubject.create()
     private val statesObservable: Observable<S> = compose()
@@ -23,6 +20,8 @@ abstract class BaseViewModel<A:BaseAction, I: BaseIntent<A>,
     abstract fun getIdleState(): S
 
     abstract fun getReducer(): BiFunction<S, in R, S>?
+
+    private fun mapIntentToAction(intent: I) = intent.mapToAction()
 
     private fun compose(): Observable<S> {
         return intentsSubject
@@ -45,8 +44,6 @@ abstract class BaseViewModel<A:BaseAction, I: BaseIntent<A>,
             // match the stream's lifecycle to the ViewModel's one.
             .autoConnect(0)
     }
-
-    private fun mapIntentToAction(intent: I) = intent.mapToAction()
 
     override fun processIntents(intents: Observable<I>) {
         disposables.add(intents.subscribe(intentsSubject::onNext))

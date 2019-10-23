@@ -1,6 +1,7 @@
 package com.mona.mvi.di.component
 
 import android.app.Application
+import android.content.Context
 import com.mona.mvi.di.module.ActivityModule
 import com.mona.mvi.di.module.AppModule
 import com.mona.mvi.di.module.NetworkModule
@@ -21,7 +22,7 @@ interface AppComponent {
         fun application(application: Application): Builder
 
         @BindsInstance
-        fun baseUrl(url : String) : AppComponent.Builder
+        fun context(context: Context): Builder
 
         fun build(): AppComponent
     }
