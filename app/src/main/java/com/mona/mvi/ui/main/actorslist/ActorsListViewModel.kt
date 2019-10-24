@@ -29,8 +29,7 @@ class ActorsListViewModel @Inject constructor(actionProcessor: ActorsListActionP
     companion object {
         private val reducer =
             BiFunction { previousState: ActorsListViewState, result: ActorsListResult ->
-                when (result) {
-                    is ActorsListResult.LoadActorsResult ->
+
                         when (result) {
                         is ActorsListResult.LoadActorsResult.Success -> {
                             previousState.copy(
@@ -46,9 +45,7 @@ class ActorsListViewModel @Inject constructor(actionProcessor: ActorsListActionP
                             isLoading = true
                         )
                     }
-                    is ActorsListResult.LoadActorsResult.Success -> TODO()
-                    is ActorsListResult.LoadActorsResult.Failure -> TODO()
-                }
+
             }
     }
 }

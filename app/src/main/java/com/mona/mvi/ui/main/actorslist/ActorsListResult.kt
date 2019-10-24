@@ -5,8 +5,8 @@ import com.mona.mvi.ui.base.interfaces.BaseResult
 
 sealed class ActorsListResult: BaseResult {
     sealed class LoadActorsResult : ActorsListResult() {
-        data class Success(val result: List<ActorInfo>): ActorsListResult()
-        data class Failure(val error: Throwable): ActorsListResult()
+        data class Success(val result: ArrayList<ActorInfo>): LoadActorsResult()
+        data class Failure(val error: Throwable): LoadActorsResult()
         object InFlight : LoadActorsResult()
     }
 }
