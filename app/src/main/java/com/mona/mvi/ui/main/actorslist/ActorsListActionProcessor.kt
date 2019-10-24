@@ -1,12 +1,13 @@
 package com.mona.mvi.ui.main.actorslist
 
 import com.mona.mvi.ui.base.interfaces.MviActionProcessor
-import com.mona.mvi.utils.SchedulerProvider
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
-class ActorsListActionProcessor @Inject constructor(repository: ActorsListRepository, schedulerProvider: SchedulerProvider):
+class ActorsListActionProcessor @Inject constructor(repository: ActorsListRepository):
     MviActionProcessor<ActorsListAction, ActorsListResult> {
 
     private val loadActorsProcessor =
@@ -16,7 +17,8 @@ class ActorsListActionProcessor @Inject constructor(repository: ActorsListReposi
                     .toObservable()
                     .map { actors -> ActorsListResult.LoadActorsResult.Success(actors.results!!) }
                     .cast(ActorsListResult.LoadActorsResult::class.java)
-                    .compose(schedulerProvider.ioToMainObservableScheduler())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
                     .startWith(ActorsListResult.LoadActorsResult.InFlight)
             }
         }
